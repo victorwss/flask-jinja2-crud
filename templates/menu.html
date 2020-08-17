@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastro{% endblock %}
+{% block js %}
+    function logout() {
+        document.getElementById("form_logout").submit();
+    }
+{% endblock %}
+{% block conteudo %}
+    {% if mensagem != '' %}
+        <h2>{{mensagem}}</h2>
+    {% endif %}
+    <p>Escolha a opção que você quer:</p>
+    <p><a href="/aluno">Listar alunos</a></p>
+    <p><a href="/serie">Listar séries</a></p>
+    <p><a href="/aluno/novo">Cadastrar aluno</a></p>
+    <p><a href="/serie/novo">Cadastrar série</a></p>
+    <p><a href="#" onclick="javascript:logout()">Logout</a></p>
+    <form action="/logout" id="form_logout" method="POST" style="display: none"></form>
+{% endblock %}

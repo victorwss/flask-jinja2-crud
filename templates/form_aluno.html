@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastrar aluno{% endblock %}
+{% block js %}
+    function validar() {
+        const nome = document.getElementById('nome');
+        const sexo_masc = document.getElementById('sexo_masc');
+        const sexo_fem = document.getElementById('sexo_fem');
+        const serie = document.getElementById('serie');
+        if (nome.value === '') {
+            alert("Preencha o nome.");
+            return false;
+        }
+        if (!sexo_masc.checked && !sexo_fem.checked) {
+            alert("Escolha o sexo.");
+            return false;
+        }
+        if (serie.value == "escolha") {
+            alert("Escolha a série.");
+            return false;
+        }
+        return true;
+    }
+
+    function salvar() {
+        if (!validar()) return;
+        document.getElementById("form_principal").submit();
+    }
+
+    {% if aluno['id_aluno'] != 'novo' %}
+        function excluir() {
+            if (!confirm("Você tem certeza?")) return;
+            xhr = new XMLHttpRequest();
+            xhr.open('DELETE', "{{ url_for('deletar_aluno_api', id_aluno = aluno['id_aluno']) }}");
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.readyState !== 4) return;
+                if (xhr.status === 200 || xhr.status === 404) {
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                } else {
+                    alert('Erro ' + xhr.status);
+                }
+            };
+            xhr.send();
+        }
+
+        function apagar_foto() {
+            if (!confirm("Você tem certeza?")) return;
+            xhr = new XMLHttpRequest();
+            xhr.open('DELETE', "{{ url_for('aluno_deletar_foto', id_foto = aluno['id_foto']) }}");
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.readyState !== 4) return;
+                if (xhr.status === 200 || xhr.status === 404) {
+                    document.getElementById("foto").setAttribute('src', "{{ url_for('static', filename = 'no-photo.png') }}");
+                } else {
+                    alert('Erro ' + xhr.status);
+                }
+            };
+            xhr.send();
+        }
+    {% endif %}
+{% endblock %}
+{% block conteudo %}
+    <form action="/aluno/{{ aluno['id_aluno'] }}" method="POST" id="form_principal" enctype="multipart/form-data">
+        {% if aluno['id_aluno'] != 'novo' %}
+            <p>
+                <label>Id:</label>
+                {{aluno['id_aluno']}}
+            </p>
+        {% endif %}
+        <p>
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" autocomplete="off" value="{{aluno['nome']}}" />
+        </p>
+        <p>
+            <label>Sexo:</label>
+            <input type="radio" id="sexo_masc" name="sexo" value="M" {% if aluno['sexo'] == 'M' %}checked="checked"{% endif %}>Masculino</input>
+            <input type="radio" id="sexo_fem" name="sexo" value="F" {% if aluno['sexo'] == 'F' %}checked="checked"{% endif %}>Feminino</input>
+        </p>
+        <p>
+            <label for="serie">Série:</label>
+            <select name="id_serie" id="serie">
+                <option value="escolha">Escolha...</option>
+                {% for serie in series %}
+                    <option value="{{serie['id_serie']}}" {% if aluno['id_serie'] == serie['id_serie'] %}selected="selected"{% endif %}>{{serie['numero']}} {{serie['turma']}}</option>
+                {% endfor %}
+            </select>
+        </p>
+        <p>
+            <label for="foto">Foto:</label>
+            {% if aluno['id_foto'] != '' %}
+                <img src="{{ url_for('aluno_download_foto', id_foto = aluno['id_foto']) }}" id="foto" width="200"/>
+            {% else %}
+                <img src="{{ url_for('static', filename = 'no-photo.png') }}" id="foto" width="200"/>
+            {% endif %}
+            <label for="foto" class="upload">Upload<input type="file" name="foto" /></label>
+            {% if aluno['id_foto'] != '' %}
+                <button type="button" onclick="javascript:apagar_foto();">Excluir foto</button>
+            {% endif  %}
+        </p>
+        <p>
+            <button type="button" onclick="javascript:salvar();">Salvar</button>
+            {% if aluno['id_aluno'] != 'novo' %}<button type="button" onclick="javascript:excluir();">Excluir</button>{% endif %}
+        </p>
+    </form>
+    <p><a href="/">Voltar</a></p>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}Alunos{% endblock %}
+{% block conteudo %}
+    <h1>Alunos:</h1>
+    <table>
+        <tr>
+            <td>ID</td>
+            <td>Nome</td>
+            <td>Sexo</td>
+            <td>Série</td>
+            <td>Turma</td>
+            <td>&nbsp;</td>
+        </tr>
+        {% for aluno in alunos %}
+            <tr>
+                <td>{{aluno['id_aluno']}}</td>
+                <td>{{aluno['nome']}}</td>
+                <td>{% if aluno['sexo'] == 'M' %}Masculino{% else %}Feminino{% endif %}</td>
+                <td>{{aluno['numero']}}</td>
+                <td>{{aluno['turma']}}</td>
+                <td><a href="/aluno/{{aluno['id_aluno']}}">Editar</a></td>
+            </tr>
+        {% endfor %}
+    </table>
+    <p><a href="/">Voltar</a></p>
+{% endblock %}

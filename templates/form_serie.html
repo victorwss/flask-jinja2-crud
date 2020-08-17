@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastrar série{% endblock %}
+{% block conteudo %}
+    <form action="/serie/novo" method="POST">
+        <p>
+            <label for="numero">Número:</label>
+            <input type="text" id="numero" name="numero" autocomplete="off" />
+        </p>
+        <p>
+            <label for="turma">Turma:</label>
+            <input type="text" id="turma" name="turma" autocomplete="off" />
+        </p>
+        <p>
+            <button type="submit">Salvar</button>
+        </p>
+    </form>
+    <p><a href="/">Voltar</a></p>
+{% endblock %}
