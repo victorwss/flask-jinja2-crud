@@ -22,8 +22,7 @@
     }
 
     function salvar() {
-        if (!validar()) return;
-        document.getElementById("form_principal").submit();
+        if (validar()) document.getElementById("form_principal").submit();
     }
 
     {% if aluno['id_aluno'] != 'novo' %}

@@ -119,7 +119,7 @@ def criar_serie_api():
     ja_existia, serie = criar_serie(numero, turma)
 
     # Monta a resposta.
-    mensagem = f"A série {numero}{turma} já existia com o id {serie['id_serie']}." if ja_existia else f"A série {numero}{turma} criada com id {serie['id_serie']}."
+    mensagem = f"A série {numero}{turma} já existia com o id {serie['id_serie']}." if ja_existia else f"A série {numero}{turma} foi criada com id {serie['id_serie']}."
     return render_template("menu.html", logado = logado, mensagem = mensagem)
 
 ### Cadastro de alunos. ###
@@ -163,11 +163,12 @@ def form_alterar_aluno_api(id_aluno):
 
     # Faz o processamento.
     aluno = db_consultar_aluno(id_aluno)
+    series = db_listar_series_ordem()
 
     # Monta a resposta.
-    if aluno == None:
+    if aluno is None:
         return render_template("menu.html", logado = logado, mensagem = f"Esse aluno não existe."), 404
-    return render_template("form_aluno.html", logado = logado, aluno = aluno, series = db_listar_series_ordem())
+    return render_template("form_aluno.html", logado = logado, aluno = aluno, series = series)
 
 # Processa o formulário de criação de alunos. Inclui upload de fotos.
 @app.route("/aluno/novo", methods = ["POST"])
@@ -186,7 +187,8 @@ def criar_aluno_api():
     aluno = criar_aluno(nome, sexo, id_serie, salvar_arquivo_upload)
 
     # Monta a resposta.
-    return render_template("menu.html", logado = logado, mensagem = f"O aluno {nome} foi criado com o id {aluno['id_aluno']}." if sexo == "M" else f"A aluna {nome} foi criada com o id {aluno['id_aluno']}.")
+    mensagem = f"O aluno {nome} foi criado com o id {aluno['id_aluno']}." if sexo == "M" else f"A aluna {nome} foi criada com o id {aluno['id_aluno']}."
+    return render_template("menu.html", logado = logado, mensagem = mensagem)
 
 # Processa o formulário de alteração de alunos. Inclui upload de fotos.
 @app.route("/aluno/<int:id_aluno>", methods = ["POST"])
@@ -206,8 +208,10 @@ def editar_aluno_api(id_aluno):
 
     # Monta a resposta.
     if status == 'não existe':
-        return render_template("menu.html", logado = logado, mensagem = "Esse aluno nem mesmo existia mais." if sexo == "M" else "Essa aluna nem mesmo existia mais."), 404
-    return render_template("menu.html", logado = logado, mensagem = f"O aluno {nome} com o id {id_aluno} foi editado." if sexo == "M" else f"A aluna {nome} com o id {id_aluno} foi editada.")
+        mensagem = "Esse aluno nem mesmo existia mais." if sexo == "M" else "Essa aluna nem mesmo existia mais."
+        return render_template("menu.html", logado = logado, mensagem = mensagem), 404
+    mensagem = f"O aluno {nome} com o id {id_aluno} foi editado." if sexo == "M" else f"A aluna {nome} com o id {id_aluno} foi editada."
+    return render_template("menu.html", logado = logado, mensagem = mensagem)
 
 # Processa o botão de excluir um aluno.
 @app.route("/aluno/<int:id_aluno>", methods = ["DELETE"])
@@ -221,9 +225,10 @@ def deletar_aluno_api(id_aluno):
     aluno = apagar_aluno(id_aluno)
 
     # Monta a resposta.
-    if aluno == None:
+    if aluno is None:
         return render_template("menu.html", logado = logado, mensagem = "Esse aluno nem mesmo existia mais."), 404
-    return render_template("menu.html", logado = logado, mensagem = f"O aluno com o id {id_aluno} foi excluído." if aluno['sexo'] == "M" else f"A aluna com o id {id_aluno} foi excluída.")
+    mensagem = f"O aluno com o id {id_aluno} foi excluído." if aluno['sexo'] == "M" else f"A aluna com o id {id_aluno} foi excluída."
+    return render_template("menu.html", logado = logado, mensagem = mensagem)
 
 ### Fotos dos alunos. ###
 
@@ -292,7 +297,7 @@ def autenticar_login():
 
 def criar_serie(numero, turma):
     serie_ja_existe = db_verificar_serie(numero, turma)
-    if serie_ja_existe != None: return True, serie_ja_existe
+    if serie_ja_existe is not None: return True, serie_ja_existe
     serie_nova = db_criar_serie(numero, turma)
     return False, serie_nova
 
@@ -301,7 +306,8 @@ def criar_aluno(nome, sexo, id_serie, salvar_foto):
 
 def editar_aluno(id_aluno, nome, sexo, id_serie, salvar_foto, apagar_foto):
     aluno = db_consultar_aluno(id_aluno)
-    if aluno == None: return 'não existe', None
+    if aluno is None:
+        return 'não existe', None
     id_foto = salvar_foto()
     if id_foto == "":
         id_foto = aluno["id_foto"]
@@ -314,10 +320,6 @@ def apagar_aluno(id_aluno):
     aluno = db_consultar_aluno(id_aluno)
     if aluno is not None: db_deletar_aluno(id_aluno)
     return aluno
-
-def ler_aluno(id_aluno):
-    if id_aluno == 'novo': return {'id_aluno': 'novo', 'nome': '', 'sexo': '', 'id_serie': '', 'id_foto': ''}
-    return db_consultar_aluno(int(id_aluno))
 
 ###############################################
 #### Funções auxiliares de banco de dados. ####
@@ -401,7 +403,7 @@ def db_verificar_serie(numero, turma):
 
 def db_consultar_aluno(id_aluno):
     with closing(conectar()) as con, closing(con.cursor()) as cur:
-        cur.execute("SELECT a.id_aluno, a.nome, a.sexo, a.id_serie, a.id_foto, s.numero, s.turma FROM aluno a INNER JOIN serie s ON a.id_serie = s.id_serie WHERE id_aluno = ?", [id_aluno])
+        cur.execute("SELECT a.id_aluno, a.nome, a.sexo, a.id_serie, a.id_foto, s.numero, s.turma FROM aluno a INNER JOIN serie s ON a.id_serie = s.id_serie WHERE a.id_aluno = ?", [id_aluno])
         return row_to_dict(cur.description, cur.fetchone())
 
 def db_listar_alunos():
